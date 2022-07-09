@@ -33,35 +33,37 @@ fn handle_connection(mut stream:TcpStream) {
     //使用字节字符串语法b“”将get的文本转换为字节字符串
     let get = b"GET / HTTP/1.1\r\n";
 
-    //如果buffer中的数据是以get中的字节开头，则执行以下操作
-    if buffer.starts_with(get) {
-        //读取hello.html文件
-        let contents = fs::read_to_string("hello.html").unwrap();
+    match buffer.starts_with(get) {
+        //如果buffer中的数据是以get中的字节开头，则执行以下操作
+        true => {
+            //读取hello.html文件
+            let contents = fs::read_to_string("hello.html").unwrap();
 
-        //使用format！把文件的内容添加为成功响应的消息体
-        let response = format!("HTTP/1.1 200 OK\r\n\r\n{}", contents);
+            //使用format！把文件的内容添加为成功响应的消息体
+            let response = format!("HTTP/1.1 200 OK\r\n\r\n{}", contents);
 
-        //使用as_bytes()方法将response字符串转换为字节，并发送到连接中去
-        stream.write(response.as_bytes()).unwrap();
+            //使用as_bytes()方法将response字符串转换为字节，并发送到连接中去
+            stream.write(response.as_bytes()).unwrap();
 
-        //flush（）会等待并阻止程序继续运行直到所有字节都被写入连接中
-        stream.flush().unwrap();
-
+            //flush（）会等待并阻止程序继续运行直到所有字节都被写入连接中
+            stream.flush().unwrap();
+        },
         //若buffer没有以get中的字节开头，以下代码会对这些请求作出处理
-    } else {
-        //设置包含404状态码以及“404 NOT FOUND”的原因短语
-        let status_line = "HTTP/1.1 404 NOT FOUND\r\n\r\n";
-        //读取404.html文件
-        let contents = fs::read_to_string("404.html").unwrap();
-        //使用format！把文件的内容添加为响应的消息体
-        let response = format!("{}{}", status_line, contents);
+        false => {
+            //设置包含404状态码以及“404 NOT FOUND”的原因短语
+            let status_line = "HTTP/1.1 404 NOT FOUND\r\n\r\n";
+            
+            //读取404.html文件
+            let contents = fs::read_to_string("404.html").unwrap();
+            
+            //使用format！把文件的内容添加为响应的消息体
+            let response = format!("{}{}", status_line, contents);
 
-        //使用as_bytes()方法将response字符串转换为字节，并发送到连接中去
-        stream.write(response.as_bytes()).unwrap();
+            //使用as_bytes()方法将response字符串转换为字节，并发送到连接中去
+            stream.write(response.as_bytes()).unwrap();
         
-        //flush（）会等待并阻止程序继续运行直到所有字节都被写入连接中
-        stream.flush().unwrap();
-    }
-
-    
+            //flush（）会等待并阻止程序继续运行直到所有字节都被写入连接中
+            stream.flush().unwrap();
+        },
+    }    
 }
